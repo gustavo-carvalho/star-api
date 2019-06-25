@@ -1,5 +1,7 @@
 package com.carvalho.gustavo.starapi.planet;
 
+import com.carvalho.gustavo.starapi.swapi.SwapiPlanetModel;
+import com.carvalho.gustavo.starapi.swapi.SwapiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -7,12 +9,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
 public class PlanetService {
     @Autowired
     private PlanetRepository planetRepository;
+
+    @Autowired
+    private SwapiService swapiService;
 
     public List<PlanetEntity> getAll() {
         List<PlanetEntity> planets = new ArrayList<>();
@@ -23,6 +29,10 @@ public class PlanetService {
 
     @Transactional
     public synchronized PlanetEntity add(PlanetEntity planet) {
+        Optional<SwapiPlanetModel> swapiPlanet = this.swapiService.fetchPlanetByName(planet.getName());
+        Integer movieAppearances = swapiPlanet.map(p -> p.getFilms().size())
+                .orElse(0);
+        planet.setMovieAppearances(movieAppearances);
         return this.planetRepository.save(planet);
     }
 
